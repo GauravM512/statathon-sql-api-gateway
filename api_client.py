@@ -42,6 +42,85 @@ class SurveyAPIClient:
         """Get schema information for a table"""
         response = requests.get(f"{self.base_url}/schema/{database}/{table}")
         return response.json()
+    
+    # RESTful API methods
+    def get_surveys(self, status=None, created_after=None, created_before=None, limit=100, offset=0):
+        """Get surveys with optional filtering"""
+        params = {"limit": limit, "offset": offset}
+        if status:
+            params["status"] = status
+        if created_after:
+            params["created_after"] = created_after
+        if created_before:
+            params["created_before"] = created_before
+            
+        response = requests.get(f"{self.base_url}/api/surveys", params=params)
+        return response.json()
+    
+    def get_responses(self, survey_id=None, survey_name=None, age_group=None, gender=None, 
+                     location=None, education_level=None, income_range=None, 
+                     response_after=None, response_before=None, limit=100, offset=0):
+        """Get responses with comprehensive filtering"""
+        params = {"limit": limit, "offset": offset}
+        if survey_id:
+            params["survey_id"] = survey_id
+        if survey_name:
+            params["survey_name"] = survey_name
+        if age_group:
+            params["age_group"] = age_group
+        if gender:
+            params["gender"] = gender
+        if location:
+            params["location"] = location
+        if education_level:
+            params["education_level"] = education_level
+        if income_range:
+            params["income_range"] = income_range
+        if response_after:
+            params["response_after"] = response_after
+        if response_before:
+            params["response_before"] = response_before
+            
+        response = requests.get(f"{self.base_url}/api/responses", params=params)
+        return response.json()
+    
+    def get_demographics(self, age_group=None, gender=None, education_level=None, 
+                        income_range=None, location=None, limit=100, offset=0):
+        """Get demographics with filtering"""
+        params = {"limit": limit, "offset": offset}
+        if age_group:
+            params["age_group"] = age_group
+        if gender:
+            params["gender"] = gender
+        if education_level:
+            params["education_level"] = education_level
+        if income_range:
+            params["income_range"] = income_range
+        if location:
+            params["location"] = location
+            
+        response = requests.get(f"{self.base_url}/api/demographics", params=params)
+        return response.json()
+    
+    def get_analytics_summary(self, survey_id=None, age_group=None, gender=None, location=None):
+        """Get analytics summary with filtering"""
+        params = {}
+        if survey_id:
+            params["survey_id"] = survey_id
+        if age_group:
+            params["age_group"] = age_group
+        if gender:
+            params["gender"] = gender
+        if location:
+            params["location"] = location
+            
+        response = requests.get(f"{self.base_url}/api/analytics/summary", params=params)
+        return response.json()
+    
+    def get_filter_options(self):
+        """Get available filter options"""
+        response = requests.get(f"{self.base_url}/api/filters/options")
+        return response.json()
 
 # Example usage and common queries
 def example_queries():

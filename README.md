@@ -1,14 +1,18 @@
 # Survey Data API Gateway
 
-A REST API Gateway built with FastAPI to run SQL queries on survey datasets and retrieve results in JSON format. Enhanced with **sqlglot** for advanced SQL parsing, analysis, and validation.
+A REST API Gateway built with FastAPI to run SQL queries on survey datasets and retrieve results in JSON format. Enhanced with **sqlglot** for advanced SQL parsing, analysis, and validation, plus comprehensive **RESTful API endpoints** for filtered data access.
 
 ## Features
 
 - **Advanced SQL Parsing**: Uses sqlglot for robust SQL parsing and validation
+- **RESTful API Layer**: Query parameter-based filtering for easy data access
+- **Demographic Filtering**: Filter by age, gender, location, education, income
 - **Query Analysis**: Automatic analysis of SQL queries (tables, columns, joins, aggregations)
 - **Query Formatting**: Pretty-print and format SQL queries
 - **Secure SQL Query Execution**: Execute SELECT queries on survey databases with enhanced security
 - **JSON Response Format**: All results returned in user-friendly JSON format with query metadata
+- **Pagination Support**: Built-in pagination for large datasets
+- **Analytics Endpoints**: Summary statistics and analytics with filtering
 - **Database Exploration**: List databases, tables, and schema information
 - **Sample Data Access**: Quick access to sample data from any table
 - **CORS Support**: Cross-origin requests enabled for web applications
@@ -47,6 +51,8 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 ### Core Endpoints
 
+### Core Endpoints
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/` | API information and available endpoints |
@@ -57,9 +63,89 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 | GET | `/sample/{database}/{table}` | Get sample data from a table |
 | GET | `/schema/{database}/{table}` | Get table schema information |
 
+### RESTful API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/surveys` | Get surveys with filtering (status, date range) |
+| GET | `/api/responses` | Get responses with demographic filtering |
+| GET | `/api/demographics` | Get demographic data with filtering |
+| GET | `/api/analytics/summary` | Get analytics summary with filtering |
+| GET | `/api/filters/options` | Get available filter options for all fields |
+
+### RESTful API Query Parameters
+
+**Surveys Endpoint (`/api/surveys`)**:
+- `status`: Filter by survey status (active, completed)
+- `created_after`: Filter surveys created after date (YYYY-MM-DD)
+- `created_before`: Filter surveys created before date (YYYY-MM-DD)
+- `limit`: Number of records to return (default: 100, max: 1000)
+- `offset`: Number of records to skip (default: 0)
+
+**Responses Endpoint (`/api/responses`)**:
+- `survey_id`: Filter by survey ID
+- `survey_name`: Filter by survey name (partial match)
+- `age_group`: Filter by age group (e.g., '25-34', '35-44')
+- `gender`: Filter by gender
+- `location`: Filter by location/state (partial match)
+- `education_level`: Filter by education level
+- `income_range`: Filter by income range
+- `response_after`: Filter responses after date (YYYY-MM-DD)
+- `response_before`: Filter responses before date (YYYY-MM-DD)
+- `limit`: Number of records to return (default: 100, max: 1000)
+- `offset`: Number of records to skip (default: 0)
+
+**Demographics Endpoint (`/api/demographics`)**:
+- `age_group`: Filter by age group
+- `gender`: Filter by gender
+- `education_level`: Filter by education level
+- `income_range`: Filter by income range
+- `location`: Filter by location (partial match)
+- `limit`: Number of records to return (default: 100, max: 1000)
+- `offset`: Number of records to skip (default: 0)
+
+**Analytics Summary Endpoint (`/api/analytics/summary`)**:
+- `survey_id`: Filter by survey ID
+- `age_group`: Filter by age group
+- `gender`: Filter by gender
+- `location`: Filter by location (partial match)
+
 ### Example Requests
 
-#### Analyze a Query (New!)
+### Example Requests
+
+#### Get Filter Options (NEW!)
+
+```bash
+curl "http://localhost:8000/api/filters/options"
+```
+
+#### Get Active Surveys (NEW!)
+
+```bash
+curl "http://localhost:8000/api/surveys?status=active&limit=10"
+```
+
+#### Get Filtered Survey Responses (Like PLFS Data) (NEW!)
+
+```bash
+# Similar to: api/plfs/data?state=Maharashtra&gender=female&age=15-29
+curl "http://localhost:8000/api/responses?location=Maharashtra&gender=Female&age_group=25-34&limit=50"
+```
+
+#### Get Demographics with Filtering (NEW!)
+
+```bash
+curl "http://localhost:8000/api/demographics?gender=Female&education_level=Bachelor's"
+```
+
+#### Get Analytics Summary (NEW!)
+
+```bash
+curl "http://localhost:8000/api/analytics/summary?survey_id=1&gender=Female"
+```
+
+#### Analyze a Query
 
 ```bash
 curl -X POST "http://localhost:8000/analyze" \
@@ -177,6 +263,27 @@ Use the included Python client to interact with the API:
 from api_client import SurveyAPIClient
 
 client = SurveyAPIClient()
+
+# Get available filter options
+filter_options = client.get_filter_options()
+print("Available Filters:", filter_options)
+
+# Get surveys with filtering
+active_surveys = client.get_surveys(status="active", limit=10)
+print("Active Surveys:", active_surveys)
+
+# Get responses with demographic filtering (like PLFS example)
+filtered_responses = client.get_responses(
+    gender="Female", 
+    age_group="25-34", 
+    location="New York",
+    limit=20
+)
+print("Filtered Responses:", filtered_responses)
+
+# Get analytics summary
+analytics = client.get_analytics_summary(survey_id=1, gender="Female")
+print("Analytics Summary:", analytics)
 
 # Execute a query
 result = client.execute_query("SELECT * FROM surveys")
